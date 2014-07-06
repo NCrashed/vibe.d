@@ -190,7 +190,7 @@ final class MallocAllocator : Allocator {
 	void[] alloc(size_t sz)
 	{
 		auto ptr = .malloc(sz + Allocator.alignment);
-		enforceEx!OutOfMemoryError(ptr !is null);
+		cast(void)enforceEx!OutOfMemoryError(ptr !is null);
 		return adjustPointerAlignment(ptr)[0 .. sz];
 	}
 

@@ -458,7 +458,7 @@ final class Libevent2Driver : EventDriver {
 		dur += 9.hnsecs(); // round up to the next usec to avoid premature timer events
 		timeval tvdur;
 		tvdur.tv_sec = cast(int)dur.total!"seconds"();
-		tvdur.tv_usec = dur.fracSec().usecs();
+		dur.split!"usecs"(tvdur.tv_usec);
 		event_add(m_timerEvent, &tvdur);
 		assert(event_pending(m_timerEvent, EV_TIMEOUT, null));
 		logTrace("Rescheduled timer event for %s seconds", dur.total!"usecs" * 1e-6);

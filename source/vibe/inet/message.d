@@ -183,7 +183,7 @@ SysTime parseRFC822DateTimeString(string str)
 
 	auto dt = DateTime(year, month, day, hour, minute, second);
 	if( tzoffset == 0 ) return SysTime(dt, UTC());
-	else return SysTime(dt, new immutable SimpleTimeZone((tzoffset / 100) * 60 + tzoffset % 100));
+	else return SysTime(dt, new immutable SimpleTimeZone(dur!"minutes"((tzoffset / 100) * 60 + tzoffset % 100)));
 }
 
 unittest {
