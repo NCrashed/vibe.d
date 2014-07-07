@@ -1254,6 +1254,18 @@ unittest {
 	assert(deserializeBson!(ubyte[])(bson) == data);
 }
 
+unittest { // issue #709
+ 	ulong[] data = [2354877787627192443, 1, 2354877787627192442];
+	auto bson = Bson.fromJson(serializeToBson(data).toJson);
+	assert(deserializeBson!(ulong[])(bson) == data);
+}
+
+unittest { // issue #709
+ 	uint[] data = [1, 2, 3, 4];
+	auto bson = Bson.fromJson(serializeToBson(data).toJson);
+	assert(deserializeBson!(uint[])(bson) == data);
+	assert(deserializeBson!(ulong[])(bson) == cast(ulong[])data);
+}
 
 /**
 	Serializes to an in-memory BSON representation.
@@ -1408,7 +1420,10 @@ struct BsonSerializer {
 		else static if (is(T == bool)) return m_inputData.get!bool();
 		else static if (is(T == uint)) return cast(T)m_inputData.get!int();
 		else static if (is(T : int)) return m_inputData.get!int().to!T;
-		else static if (is(T : long)) return cast(T)m_inputData.get!long();
+		else static if (is(T : long)) {
+			if(m_inputData.type == Bson.Type.int_) return cast(T)m_inputData.get!int();
+			else return cast(T)m_inputData.get!long();
+		}
 		else static if (is(T : double)) return cast(T)m_inputData.get!double();
 		else static if (is(T == SysTime)) {
 			// support legacy behavior to serialize as string
@@ -1465,7 +1480,7 @@ private Bson.Type jsonTypeToBsonType(Json.Type tp)
 		Bson.Type.undefined,
 		Bson.Type.null_,
 		Bson.Type.bool_,
-		Bson.Type.int_,
+		Bson.Type.long_,
 		Bson.Type.double_,
 		Bson.Type.string,
 		Bson.Type.array,
@@ -1486,12 +1501,7 @@ private Bson.Type writeBson(R)(ref R dst, in Json value)
 			dst.put(cast(ubyte)(cast(bool)value ? 0x01 : 0x00));
 			return Bson.Type.bool_;
 		case Json.Type.int_:
-			auto v = cast(long)value;
-			if( v >= int.min && v <= int.max ){
-				dst.put(toBsonData(cast(int)v));
-				return Bson.Type.int_;
-			}
-			dst.put(toBsonData(v));
+			dst.put(toBsonData(cast(long)value));
 			return Bson.Type.long_;
 		case Json.Type.float_:
 			dst.put(toBsonData(cast(double)value));
